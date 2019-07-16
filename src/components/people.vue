@@ -12,7 +12,8 @@
      <ul  v-for="(elem , ex) in selected" v-bind:key="elem" >    
      <li>  
             <label class="titre" > {{ex}}   : </label> 
-            <div class="donnee" v-linkified>
+           <!-- <div class="donnee" v-linkified>  -->
+             <div class="donnee"  v-if="elem ">
                     {{elem}} 
             </div> 
       </li>
