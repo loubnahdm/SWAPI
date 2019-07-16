@@ -10,7 +10,7 @@
      <transition name="alert-in" enter-active-class="animated rollIn" >
      <div  id="detaille" v-if="selected != 'Choose ...'">
      <ul  v-for="(elem , ex) in selected" v-bind:key="elem" >    
-     <li>   <label class="titre" > {{ex}}   : </label> <div class="donnee">{{elem}} </div> </li>
+     <li>   <label class="titre" > {{ex}}   : </label> <div class="donnee" v-linkified> {{elem}} </div> </li>
      </ul>
      </div>
      </transition>
