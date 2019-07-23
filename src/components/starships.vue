@@ -1,16 +1,16 @@
 <template>
   <div class="starships-countainer">
       <img id="logo" alt="Vue logo" src="../assets/starships.png">
-     <div id="container" v-for="(data,index) in Starships" :key="index" >
-              <select id="list-starships"  v-model="selected"    v-if="index == 'results'"   :required='true' > 
+     <div id="container"  >
+              <select id="list-starships"  v-model="selected"      :required='true' > 
                 <option disabled >Choose ...</option>
-                <option v-for="star in data" :key="star.name" :value="star">{{star.name}}</option>
+                <option v-for="(star,index) in Starships" :key="index" :value="star">{{star.name}}</option>
               </select>
      </div>
      <transition name="alert-in" enter-active-class="animated bounceInDown" >
      <div  id="detaille" v-if="selected != 'Choose ...'">
      <ul  v-for="(elem , ex) in selected" v-bind:key="elem" >    
-     <li>   <label class="titre" > {{ex}}   : </label> <div class="donnee">{{elem}} </div> </li>
+     <li>   <label class="titre" > {{ex}}   : </label><div class="donnee" v-linkified> {{elem}} </div> </li>
      </ul>
      </div>
      </transition>
@@ -34,8 +34,30 @@ data: () => ({
   created(){
       axios.get('https://swapi.co/api/starships/')
       .then(response => {
-      this.Starships = response.data;
-      console.log(response);
+      this.Starships = response.data.results;
+
+       this.Starships.map((p, index) => {
+          let keys = Object.keys(p)
+          keys.map(k => {
+           if (['pilots'].includes(k)) {
+              p[k].map((url, i) => {
+                axios.get(url)
+                .then(({ data }) => {
+                  //console.log('others - data.name', data.name)
+                  this.Starships[index][k][i] = data.name
+                })
+              })
+            } else if (['films'].includes(k)) {
+              p[k].map((url, i) => {
+                axios.get(url)
+                .then(({ data }) => {
+                  //console.log('films - data.title', data.title)
+                  this.Starships[index][k][i] = data.title
+                })
+              })
+            }
+          })
+        })
        })
       .catch(e => {
       this.errors.push(e);

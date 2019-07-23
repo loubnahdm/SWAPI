@@ -1,16 +1,16 @@
 <template>
   <div class="specis-countainer">
       <img id="logo" alt="Vue logo" src="../assets/species.png">
-     <div id="container" v-for="(data,index) in Species" :key="index" >
-              <select id="list-species"  v-model="selected"    v-if="index == 'results'"   :required='true' > 
+     <div id="container">
+              <select id="list-species"  v-model="selected"     :required='true' > 
                 <option disabled >Choose ...</option>
-                <option v-for="spc in data" :key="spc.name" :value="spc">{{spc.name}}</option>
+                <option v-for="(spc , index) in Species" :key="index" :value="spc">{{spc.name}}</option>
               </select>
      </div>
      <transition name="alert-in" enter-active-class="animated lightSpeedIn" >
      <div  id="detaille" v-if="selected != 'Choose ...'">
      <ul  v-for="(elem , ex) in selected" v-bind:key="elem" >    
-     <li>   <label class="titre" > {{ex}}   : </label> <div class="donnee">{{elem}} </div> </li>
+     <li>   <label class="titre" > {{ex}}   : </label> <div class="donnee" v-linkified> {{elem}} </div> </li>
      </ul>
      </div>
      </transition>
@@ -36,8 +36,37 @@ data: () => ({
   created(){
       axios.get('https://swapi.co/api/species/')
       .then(response => {
-      this.Species = response.data;
-      console.log(response);
+      this.Species = response.data.results;
+       this.Species.map((p, index) => {
+          let keys = Object.keys(p)
+          keys.map(k => {
+            if (k === 'homeworld') {
+              //console.log('get homeworld', p[k]);
+              
+              axios.get(p[k])
+              .then(({ data }) => {
+                //console.log('data.name', data.name)
+                this.Species[index][k] = data.name
+              })
+            } else if (['people'].includes(k)) {
+              p[k].map((url, i) => {
+                axios.get(url)
+                .then(({ data }) => {
+                  //console.log('others - data.name', data.name)
+                  this.Species[index][k][i] = data.name
+                })
+              })
+            } else if (['films'].includes(k)) {
+              p[k].map((url, i) => {
+                axios.get(url)
+                .then(({ data }) => {
+                  //console.log('films - data.title', data.title)
+                  this.Species[index][k][i] = data.title
+                })
+              })
+            }
+          })
+        })
        })
       .catch(e => {
       this.errors.push(e);

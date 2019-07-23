@@ -11,6 +11,7 @@ Vue.use(Router)
 
 
 export default new Router({
+    mode:'history', //Remove Hash From URL
     routes: [
         {
             path:'/',

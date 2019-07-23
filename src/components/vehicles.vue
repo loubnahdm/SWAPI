@@ -1,16 +1,16 @@
 <template>
   <div class="vehicles-countainer">
       <img id="logo" alt="Vue logo" src="../assets/vehicles.png">
-     <div id="container" v-for="(data,index) in Vehicles" :key="index" >
-              <select id="list-vehicles"  v-model="selected"    v-if="index == 'results'"   :required='true' > 
+     <div id="container"  >
+              <select id="list-vehicles"  v-model="selected"     :required='true' > 
                 <option disabled >Choose ...</option>
-                <option v-for="vhc in data" :key="vhc.name" :value="vhc">{{vhc.name}}</option>
+                <option v-for="(vhc,index) in Vehicles" :key="index" :value="vhc">{{vhc.name}}</option>
               </select>
      </div>
      <transition name="alert-in" enter-active-class="animated flash" >
      <div  id="detaille" v-if="selected != 'Choose ...'">
      <ul  v-for="(elem , ex) in selected" v-bind:key="elem" >    
-     <li>   <label class="titre" > {{ex}}   : </label> <div class="donnee">{{elem}} </div> </li>
+     <li>   <label class="titre" > {{ex}}   : </label> <div class="donnee" v-linkified> {{elem}} </div> </li>
      </ul>
      </div>
      </transition>
@@ -36,8 +36,29 @@ data: () => ({
   created(){
       axios.get('https://swapi.co/api/vehicles/')
       .then(response => {
-      this.Vehicles = response.data;
-      console.log(response);
+      this.Vehicles = response.data.results;
+      this.Vehicles.map((p, index) => {
+          let keys = Object.keys(p)
+          keys.map(k => {
+           if (['pilots'].includes(k)) {
+              p[k].map((url, i) => {
+                axios.get(url)
+                .then(({ data }) => {
+                  //console.log('others - data.name', data.name)
+                  this.Vehicles[index][k][i] = data.name
+                })
+              })
+            } else if (['films'].includes(k)) {
+              p[k].map((url, i) => {
+                axios.get(url)
+                .then(({ data }) => {
+                  //console.log('films - data.title', data.title)
+                  this.Vehicles[index][k][i] = data.title
+                })
+              })
+            }
+          })
+        })
        })
       .catch(e => {
       this.errors.push(e);

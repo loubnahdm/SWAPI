@@ -1,21 +1,20 @@
 <template>
   <div class="people-countainer">
      <img id="logo" alt="Vue logo" src="../assets/people.png">
-     <div id="container" v-for="(data,index) in peoples" :key="index" >
-              <select id="list-people"  v-model="selected"    v-if="index == 'results'"   :required='true' > 
-                <option disabled >Choose ...</option>
-                <option v-for="per in data" :key="per.name" :value="per">{{per.name}}</option>
-              </select>
+     <div id="container">
+        <select id="list-people"   v-model="selected"   :required='true' > 
+          <option disabled >Choose ...</option>
+          <option v-for="(per, index) in peoples" :key="index" :value="per">{{per.name}}</option>
+        </select>
      </div>
      <transition name="alert-in" enter-active-class="animated bounceInLeft" >
      <div  id="detaille" v-if="selected != 'Choose ...'">
-     <ul  v-for="(elem , ex) in selected" v-bind:key="elem" >    
-     <li>  
-            <label class="titre" > {{ex}}   : </label> 
-           <!-- <div class="donnee" v-linkified>  -->
-             <div class="donnee"  v-if="elem ">
-                    {{elem}} 
-            </div> 
+     <ul  v-for="(elem , ex) in selected" :key="elem"   >    
+      <li>
+        <label  class="titre"> {{ex}}    :</label>
+        <div class="donnee"  v-linkified >
+            {{elem}}
+        </div>
       </li>
      </ul>
      </div>
@@ -26,31 +25,104 @@
 <script>
 //import { METHODS } from 'http';
 import axios from 'axios';
+import { write } from 'fs';
+import { type } from 'os';
+import { resolve } from 'path';
 export default {
   name: 'people',
- 
-
-
-
-data: () => ({
-      selected:'Choose ...',
-      peoples: [],
-      errors: []
-      }),
+data () {
+  return {
+    selected:'Choose ...',
+    peoples: [],
+    errors: [],
+    pop:'',
+  }
+  },
   created(){
       axios.get('https://swapi.co/api/people/')
       .then(response => {
-      this.peoples = response.data;
-      console.log(response);
-       })
-      .catch(e => {
-      this.errors.push(e);
+        this.peoples=response.data.results;
+        this.peoples.map((p, index) => {
+          let keys = Object.keys(p)
+          keys.map(k => {
+            if (k === 'homeworld') {
+              //console.log('get homeworld', p[k]);
+              
+              axios.get(p[k])
+              .then(({ data }) => {
+                //console.log('data.name', data.name)
+                this.peoples[index][k] = data.name
+              })
+            } else if (['species', 'vehicles', 'starships'].includes(k)) {
+              p[k].map((url, i) => {
+                axios.get(url)
+                .then(({ data }) => {
+                  //console.log('others - data.name', data.name)
+                  this.peoples[index][k][i] = data.name
+                })
+              })
+            } else if (['films'].includes(k)) {
+              p[k].map((url, i) => {
+                axios.get(url)
+                .then(({ data }) => {
+                  //console.log('films - data.title', data.title)
+                  this.peoples[index][k][i] = data.title
+                })
+              })
+            }
+          })
+        })
+        
       })
+      .catch(e => {
+        lo
+        this.errors.push(e);
+      })    
   },
- 
- 
-    
+  
+  /*
+   methods:{
+     
+     result (valeur) {
+       console.log('result',valeur);
+       
+
+           if(valeur.indexOf("https") && typeof valeur =='string'){
+                return valeur;
+                                     }
+          else{
+            
+            if(!valeur.indexOf("https")){
+            
+              axios.get(valeur).then(response =>{
+              // console.log(response.data['name'])
+               console.log(response.data)
+                 this.pop=response.data['name'];
+            
+                 
+            
+            });
+            
+            
+            }
+            
+          }
+       }
+  },*/
+  watch:{
+    selected(newval ,oldval){
+      console.log('watcher', newval);
+     
+      
+      
+      
+    }
   }
+  
+  
+}
+
+ 
   
   
 

@@ -1,17 +1,17 @@
 <template>
   <div class="planets-countainer">
      <img id="logo" alt="Vue logo" src="../assets/planets.png">
-     <div id="container" v-for="(data,index) in Planets" :key="index" >
-              <select id="list-planets"  v-model="selected"    v-if="index == 'results'"   :required='true' > 
+     <div id="container"  >
+              <select id="list-planets"  v-model="selected"      :required='true' > 
                 <option disabled >Choose ...</option>
-                <option v-for="pln in data" :key="pln.name" :value="pln">{{pln.name}}</option>
+                <option v-for="(pln,index) in Planets" :key="index" :value="pln">{{pln.name}}</option>
               </select>
      </div>
      <transition name="alert-in" enter-active-class="animated bounceInUp" >
      <div  id="detaille" v-if="selected != 'Choose ...'">
      <ul  v-for="(elem , ex) in selected" v-bind:key="elem" >    
      <li>   <label class="titre" > {{ex}}   : </label>
-     <div class="donnee" v-linkified> {{elem}} </div> 
+     <div class="donnee" v-linkified  >{{elem}}  </div> 
      </li>
      </ul>
      </div>
@@ -37,14 +37,40 @@ data: () => ({
   created(){
       axios.get('https://swapi.co/api/planets/')
       .then(response => {
-      this.Planets = response.data;
-      console.log(response);
+      this.Planets = response.data.results;
+      //console.log(response.data.results);
+       this.Planets.map((p, index) => {
+          let keys = Object.keys(p)
+          keys.map(k => {
+             if (['residents'].includes(k)) {
+              p[k].map((url, i) => {
+                axios.get(url)
+                .then(({ data }) => {
+                  //console.log('others - data.name', data.name)
+                  this.Planets[index][k][i] = data.name
+                })
+              })
+            } else if (['films'].includes(k)) {
+              p[k].map((url, i) => {
+                axios.get(url)
+                .then(({ data }) => {
+                  //console.log('films - data.title', data.title)
+                  this.Planets[index][k][i] = data.title
+                })
+              })
+            }
+          })
+        })
        })
       .catch(e => {
       this.errors.push(e);
       })
   }
-  
+  ,
+
+
+
+
   }
 </script>
 
@@ -114,7 +140,7 @@ ul li{
 .donnee{
   position: relative;
   text-align: right;
- 
+  
   width:90%;
 }
 </style>
